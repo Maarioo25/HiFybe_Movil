@@ -2,6 +2,7 @@
   "expo": {
     "name": "HiFybe_Movil",
     "slug": "HiFybe_Movil",
+    "scheme": "hifybe-movil",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +21,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.mariobueno04.HiFybe_Movil"
     },
     "web": {
       "favicon": "./assets/favicon.png"
