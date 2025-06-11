@@ -1,10 +1,11 @@
 // FriendsScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, Image, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert,
+  View, Text, FlatList, ImageBackground, StyleSheet,
+  TouchableOpacity, ActivityIndicator, Alert,
 } from 'react-native';
 import { userService, friendService } from '../services';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function FriendsScreen() {
   const [friends, setFriends] = useState([]);
@@ -13,13 +14,8 @@ export default function FriendsScreen() {
   useEffect(() => {
     const cargarAmigos = async () => {
       try {
-        console.log('[FriendsScreen] Obteniendo usuario actual...');
         const usuario = await userService.getCurrentUser();
-        console.log('[FriendsScreen] Usuario actual:', usuario);
-
         const lista = await friendService.getFriends(usuario._id);
-        console.log('[FriendsScreen] Amigos:', lista);
-
         setFriends(lista);
       } catch (err) {
         console.error('[FriendsScreen] Error:', err.response?.data || err.message);
@@ -33,26 +29,31 @@ export default function FriendsScreen() {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card}>
-      {item.foto_perfil ? (
-        <Image
-          source={{
-            uri: item.foto_perfil.startsWith('http')
-              ? item.foto_perfil
-              : `https://api.mariobueno.info${item.foto_perfil}`,
-          }}
-          style={styles.avatar}
-        />
-      ) : (
-        <View style={[styles.avatar, { backgroundColor: '#ccc' }]} />
-      )}
-      <Text style={styles.name}>{item.nombre || 'Usuario'}</Text>
+      <ImageBackground
+        source={{
+          uri: item.foto_perfil?.startsWith('http')
+            ? item.foto_perfil
+            : `https://api.mariobueno.info${item.foto_perfil}`,
+        }}
+        style={styles.imageBackground}
+        imageStyle={styles.imageStyle}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.overlay}
+        >
+          <Text style={styles.name}>{item.nombre || 'Usuario'}</Text>
+        </LinearGradient>
+      </ImageBackground>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1DB954" />
+        <ActivityIndicator size="large" color="#4ECCA3" />
       </View>
     );
   }
@@ -74,11 +75,13 @@ export default function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, padding: 16, backgroundColor: '#fff' },
+  container:  { flex: 1, padding: 16, backgroundColor: '#1E4E4E' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title:      { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
-  alert:      { color: 'gray', textAlign: 'center', marginTop: 20 },
-  card:       { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  avatar:     { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
-  name:       { fontSize: 18 },
+  title:      { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: '#FFFFFF' },
+  alert:      { color: '#B2F5EA', textAlign: 'center', marginTop: 20 },
+  card:       { height: 120, borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
+  imageBackground: { flex: 1, justifyContent: 'center' },
+  imageStyle: { resizeMode: 'cover' },
+  overlay:    { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
+  name:       { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF', marginLeft: 'auto' },
 });
