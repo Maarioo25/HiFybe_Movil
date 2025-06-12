@@ -1,13 +1,16 @@
 // services/playlistService.js
 import api from './api';
-export const playlistService = {
-  getUserPlaylists: userId => api.get(`/spotify/playlists/${userId}`).then(r => r.data),
-  getAllPlaylists: () => api.get('/playlists').then(r => r.data),
-  getPlaylistById: id => api.get(`/playlists/${id}`).then(r => r.data),
-  createPlaylist: data => api.post('/playlists', data).then(r => r.data),
-  updatePlaylist: (id, data) => api.put(`/playlists/${id}`, data).then(r => r.data),
-  deletePlaylist: id => api.delete(`/playlists/${id}`).then(r => r.data),
-  addSongToPlaylist: (playlistId, songId) => api.post(`/playlists/${playlistId}/canciones`, { cancionId: songId }).then(r => r.data),
-  removeSongFromPlaylist: (playlistId, songId) => api.delete(`/playlists/${playlistId}/canciones/${songId}`).then(r => r.data),
-};
 
+export const playlistService = {
+  // ✅ Obtener playlists públicas del usuario desde Spotify
+  getUserPlaylists: userId =>
+    api.get(`/spotify/playlists/${userId}`).then(r => r.data),
+
+  // ✅ Obtener una playlist de Spotify (ya implementado en tu backend)
+  getSpotifyPlaylistById: (userId, playlistId) =>
+    api.get(`/public/${userId}/${playlistId}`).then(r => r.data),
+
+  // (opcional) Obtener canciones de una playlist si tuvieras una ruta específica
+  getSpotifyTracksByPlaylistId: id =>
+    api.get(`/spotify/playlist/${id}/tracks`).then(r => r.data),
+};

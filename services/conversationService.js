@@ -11,6 +11,17 @@ export const conversationService = {
   getMessages: convoId =>
     api.get(`/conversaciones/${convoId}/mensajes`).then(r => r.data),
 
-  sendMessage: (convoId, body) =>
-    api.post(`/conversaciones/${convoId}/mensajes`, body).then(r => r.data),
+  sendMessage: async (convoId, body) => {
+    console.log('[DEBUG] Enviando a:', `/conversaciones/${convoId}/mensajes`);
+    console.log('[DEBUG] Body:', body);
+    try {
+      const r = await api.post(`/conversaciones/${convoId}/mensajes`, body);
+      console.log('[DEBUG] Respuesta:', r.data);
+      return r.data;
+    } catch (err) {
+      console.error('[ERROR] Error backend:', err?.response?.data || err);
+      throw err;
+    }
+  }
+  
 };

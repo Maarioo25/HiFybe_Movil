@@ -1,4 +1,3 @@
-// ProfileScreen.js
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -9,7 +8,8 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
+  Animated
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,6 +28,8 @@ export default function ProfileScreen() {
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [tiktok, setTiktok] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastAnim] = useState(new Animated.Value(0));
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -51,6 +53,23 @@ export default function ProfileScreen() {
     })();
   }, []);
 
+  const mostrarToast = (mensaje) => {
+    setToastMessage(mensaje);
+    Animated.timing(toastAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => {
+        Animated.timing(toastAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }, 3000);
+    });
+  };
+
   const guardarPerfil = async () => {
     try {
       await Promise.all([
@@ -58,7 +77,7 @@ export default function ProfileScreen() {
         userService.updatePreferencias(user._id, { ciudad, generos_favoritos: generos.split(',').map(g => g.trim()) }),
         userService.updateRedesSociales(user._id, { instagram, twitter, tiktok })
       ]);
-      Alert.alert('Perfil actualizado');
+      mostrarToast('✅ Perfil actualizado correctamente');
     } catch (err) {
       console.error('Error guardando perfil', err);
       Alert.alert('Error al guardar perfil');
@@ -100,99 +119,104 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Tu perfil</Text>
+    <View style={{ flex: 1 }}>
+      <Animated.View style={[styles.toast, { opacity: toastAnim }]}> 
+        <Text style={styles.toastText}>{toastMessage}</Text>
+      </Animated.View>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Tu perfil</Text>
 
-      <TouchableOpacity style={styles.avatarWrapper} onPress={elegirFoto}>
-        <Image
-          source={{ uri: foto || 'https://via.placeholder.com/150' }}
-          style={styles.avatar}
+        <TouchableOpacity style={styles.avatarWrapper} onPress={elegirFoto}>
+          <Image
+            source={{ uri: foto || 'https://via.placeholder.com/150' }}
+            style={styles.avatar}
+          />
+          <View style={styles.editOverlay}>
+            <Ionicons name="camera" size={20} color="#fff" />
+          </View>
+        </TouchableOpacity>
+
+        <Text style={styles.label}>Nombre</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre"
+          value={nombre}
+          onChangeText={setNombre}
+          placeholderTextColor="#88C5B5"
         />
-        <View style={styles.editOverlay}>
-          <Ionicons name="camera" size={20} color="#fff" />
+
+        <Text style={styles.label}>Biografía</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Biografía"
+          value={bio}
+          onChangeText={setBio}
+          multiline
+          placeholderTextColor="#88C5B5"
+        />
+
+        <Text style={styles.label}>Ciudad</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Ciudad"
+          value={ciudad}
+          onChangeText={setCiudad}
+          placeholderTextColor="#88C5B5"
+        />
+
+        <Text style={styles.label}>Géneros favoritos</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Géneros favoritos (separados por coma)"
+          value={generos}
+          onChangeText={setGeneros}
+          placeholderTextColor="#88C5B5"
+        />
+
+        <Text style={styles.subtitle}>Redes sociales</Text>
+
+        <View style={styles.iconInputWrapper}>
+          <FontAwesome name="instagram" size={18} color="#B2F5EA" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Instagram"
+            value={instagram}
+            onChangeText={setInstagram}
+            placeholderTextColor="#88C5B5"
+          />
         </View>
-      </TouchableOpacity>
 
-      <Text style={styles.label}>Nombre</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
-        placeholderTextColor="#88C5B5"
-      />
+        <View style={styles.iconInputWrapper}>
+          <FontAwesome name="twitter" size={18} color="#B2F5EA" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Twitter"
+            value={twitter}
+            onChangeText={setTwitter}
+            placeholderTextColor="#88C5B5"
+          />
+        </View>
 
-      <Text style={styles.label}>Biografía</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Biografía"
-        value={bio}
-        onChangeText={setBio}
-        multiline
-        placeholderTextColor="#88C5B5"
-      />
+        <View style={styles.iconInputWrapper}>
+          <FontAwesome name="music" size={18} color="#B2F5EA" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="TikTok"
+            value={tiktok}
+            onChangeText={setTiktok}
+            placeholderTextColor="#88C5B5"
+          />
+        </View>
 
-      <Text style={styles.label}>Ciudad</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ciudad"
-        value={ciudad}
-        onChangeText={setCiudad}
-        placeholderTextColor="#88C5B5"
-      />
+        <TouchableOpacity style={styles.saveButton} onPress={guardarPerfil}>
+          <Text style={styles.saveButtonText}>Guardar cambios</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.label}>Géneros favoritos</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Géneros favoritos (separados por coma)"
-        value={generos}
-        onChangeText={setGeneros}
-        placeholderTextColor="#88C5B5"
-      />
-
-      <Text style={styles.subtitle}>Redes sociales</Text>
-
-      <View style={styles.iconInputWrapper}>
-        <FontAwesome name="instagram" size={18} color="#B2F5EA" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Instagram"
-          value={instagram}
-          onChangeText={setInstagram}
-          placeholderTextColor="#88C5B5"
-        />
-      </View>
-
-      <View style={styles.iconInputWrapper}>
-        <FontAwesome name="twitter" size={18} color="#B2F5EA" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Twitter"
-          value={twitter}
-          onChangeText={setTwitter}
-          placeholderTextColor="#88C5B5"
-        />
-      </View>
-
-      <View style={styles.iconInputWrapper}>
-        <FontAwesome name="music" size={18} color="#B2F5EA" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="TikTok"
-          value={tiktok}
-          onChangeText={setTiktok}
-          placeholderTextColor="#88C5B5"
-        />
-      </View>
-
-      <TouchableOpacity style={styles.saveButton} onPress={guardarPerfil}>
-        <Text style={styles.saveButtonText}>Guardar cambios</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={cerrarSesion}>
-        <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.logoutButton} onPress={cerrarSesion}>
+          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -206,6 +230,21 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: '#1E4E4E',
+  },
+  toast: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    padding: 12,
+    backgroundColor: '#4ECCA3',
+    borderRadius: 10,
+    zIndex: 999,
+  },
+  toastText: {
+    color: '#1E4E4E',
+    textAlign: 'center',
+    fontWeight: 'bold'
   },
   title: {
     fontSize: 24,

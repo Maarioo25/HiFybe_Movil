@@ -2,17 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  ImageBackground, StyleSheet, ActivityIndicator, Alert
+  ImageBackground, StyleSheet, ActivityIndicator, Alert,
+  StatusBar, Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { conversationService, userService } from '../services';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [meId, setMeId] = useState(null);
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -77,20 +80,27 @@ export default function ChatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tus chats</Text>
-      <FlatList
-        data={chats}
-        keyExtractor={c => c._id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      />
-    </View>
+    <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />
+      <View style={styles.container}>
+        <Text style={styles.title}>Tus chats</Text>
+        <FlatList
+          data={chats}
+          keyExtractor={c => c._id}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 16 }}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, padding: 16, backgroundColor: '#1E4E4E' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#1E4E4E'
+  },
+  container:  { flex: 1, paddingHorizontal: 16, backgroundColor: '#1E4E4E' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title:      { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: '#FFFFFF' },
   card:       { height: 100, borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
