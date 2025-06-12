@@ -70,4 +70,10 @@ export const userService = {
   updatePreferencias: (id, prefs) =>
     api.put(`/usuarios/${id}/preferencias`, prefs)
       .then(r => r.data.usuario ?? r.data),
+  
+  getUsuariosCercanos: (lat, lng) =>
+        api.get(`/usuarios/cerca?latitude=${lat}&longitude=${lng}&radio=5000`)
+          .then(r => r.data)
+          .catch(() => []),
+      
 };

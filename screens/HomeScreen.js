@@ -1,15 +1,41 @@
-import React, { useEffect, useState } from 'react';
+// HomeScreen.js
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  View, Text, StyleSheet, Image, ActivityIndicator, ScrollView
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
+import MapboxGL from '@rnmapbox/maps';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { userService } from '../services';
 import { reverseGeocode } from '../utils/geocode';
-import * as Location from 'expo-location';
+import { StatusBar } from 'react-native';
+
+
+MapboxGL.setAccessToken("pk.eyJ1IjoibWFhcmlvbzI1IiwiYSI6ImNtYnNkYndrODA1cjUyanNlMzVscHZoNnYifQ.1X7w2okP-pUP9R00f-JEyw");
+
+const screen = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [ciudadDetectada, setCiudadDetectada] = useState(null);
+  const [ubicacion, setUbicacion] = useState([-3.7635, 40.3270]);
+  const [usuariosCercanos, setUsuariosCercanos] = useState([]);
+  const cameraRef = useRef(null);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+    }
+  }, []);
 
   const obtenerUbicacion = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -17,157 +43,230 @@ export default function HomeScreen() {
       alert('Permiso de ubicación denegado');
       return null;
     }
+    const loc = await Location.getCurrentPositionAsync({});
+    return [loc.coords.longitude, loc.coords.latitude];
+  };
 
-    const location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
-    return { latitude, longitude };
+  const actualizarMapa = async () => {
+    try {
+      const coords = await obtenerUbicacion();
+      if (!coords) return;
+      setUbicacion(coords);
+      await userService.actualizarUbicacion(coords[1], coords[0]);
+      const res = await userService.getUsuariosCercanos(coords[1], coords[0]);
+      setUsuariosCercanos(res);
+      cameraRef.current?.setCamera({
+        centerCoordinate: coords,
+        zoomLevel: 13,
+        animationDuration: 1000,
+      });
+    } catch (err) {
+      console.error('[ActualizarMapa]', err);
+    }
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    (async () => {
       try {
         const data = await userService.getCurrentUser();
         const profile = data.usuario ?? data;
         setUsuario(profile);
 
-        // Solo si compartir_ubicacion está activo
         if (profile.compartir_ubicacion) {
-          const coords = await obtenerUbicacion();
-          if (coords) {
-            const { latitude, longitude } = coords;
-
-            // Solo actualiza si las coordenadas son válidas
-            if (latitude !== 0 || longitude !== 0) {
-              await userService.actualizarUbicacion(latitude, longitude);
-              const ciudad = await reverseGeocode(latitude, longitude);
-              setCiudadDetectada(ciudad);
-            }
-          }
+          await actualizarMapa();
         }
       } catch (err) {
         console.error('[HomeScreen] Error:', err.response?.data || err.message);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchUserData();
+    })();
   }, []);
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#1DB954" />
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#4ECCA3" />
       </View>
     );
   }
 
   if (!usuario) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>No se pudo cargar el perfil</Text>
+      <View style={styles.loaderContainer}>
+        <Text style={styles.errorText}>No se pudo cargar el perfil</Text>
       </View>
     );
   }
 
-  const redes = usuario.redes || {};
-  const generos = usuario.generos_favoritos || [];
-
   return (
+    
     <ScrollView contentContainerStyle={styles.container}>
-      {usuario.foto_perfil ? (
-        <Image source={{ uri: usuario.foto_perfil }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatar, { backgroundColor: '#333' }]} />
-      )}
+      <StatusBar backgroundColor="#1E4E4E" barStyle="light-content" />
+      <View style={styles.header}>
+        <Image source={require('../public/logo.png')} style={styles.logo} />
+      </View>
 
       <Text style={styles.title}>¡Hola, {usuario.nombre}!</Text>
-      <Text style={styles.email}>{usuario.email}</Text>
+      <Text style={styles.subtitle}>Mira lo que está escuchando la gente cerca tuyo</Text>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>ID:</Text>
-        <Text style={styles.infoValue}>{usuario._id}</Text>
-      </View>
+      <View style={styles.mapWrapper}>
+        <MapboxGL.MapView
+          style={styles.map}
+          styleURL={MapboxGL.StyleURL.Dark}
+          logoEnabled={false}
+          compassEnabled={false}
+          scaleBarEnabled={false}
+          attributionEnabled={false}
+        >
+          <MapboxGL.Camera
+            ref={cameraRef}
+            zoomLevel={13}
+            centerCoordinate={ubicacion}
+          />
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Proveedor:</Text>
-        <Text style={styles.infoValue}>{usuario.auth_proveedor}</Text>
-      </View>
+          {usuario.foto_perfil && (
+            <MapboxGL.PointAnnotation
+              id="mi-ubicacion"
+              coordinate={ubicacion}
+            >
+              <View style={styles.customMarkerWrapper}>
+                <Image
+                  source={{ uri: usuario.foto_perfil }}
+                  style={styles.customMarkerImage}
+                />
+              </View>
+            </MapboxGL.PointAnnotation>
+          )}
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Biografía:</Text>
-        <Text style={styles.infoValue}>{usuario.biografia || '—'}</Text>
-      </View>
+          {usuariosCercanos.map((u) => {
+            if (u._id === usuario._id) return null;
+            if (!u.ubicacion?.coordinates) return null;
+            const uri = u.foto_perfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nombre)}`;
+            return (
+              <MapboxGL.PointAnnotation
+                key={u._id}
+                id={`marker-${u._id}`}
+                coordinate={[u.ubicacion.coordinates[0], u.ubicacion.coordinates[1]]}
+              >
+                <View style={styles.customMarkerWrapper}>
+                  <Image source={{ uri }} style={styles.customMarkerImage} />
+                </View>
+              </MapboxGL.PointAnnotation>
+            );
+          })}
+        </MapboxGL.MapView>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Géneros favoritos:</Text>
-        <Text style={styles.infoValue}>{generos.join(', ') || '—'}</Text>
-      </View>
+        <TouchableOpacity
+          style={styles.centerButton}
+          onPress={async () => {
+            const coords = await obtenerUbicacion();
+            if (!coords) return;
+            setUbicacion(coords);
+            cameraRef.current?.setCamera({
+              centerCoordinate: coords,
+              zoomLevel: 13,
+              animationDuration: 1000,
+            });
+          }}
+        >
+          <Ionicons name="locate" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Redes sociales:</Text>
-        <Text style={styles.infoValue}>
-          {Object.entries(redes).map(([key, val]) => `${key}: @${val}`).join(' | ') || '—'}
-        </Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Ciudad:</Text>
-        <Text style={styles.infoValue}>{usuario.ciudad || '—'}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Ubicación:</Text>
-        <Text style={styles.infoValue}>
-          {usuario.compartir_ubicacion
-            ? (ciudadDetectada || 'Cargando ciudad...')
-            : 'Oculta por privacidad'}
-        </Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={actualizarMapa}
+        >
+          <Ionicons name="refresh" size={22} color="#fff" />
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#121212',
+  loaderContainer: {
+    flex: 1,
+    backgroundColor: '#1E4E4E',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+  },
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#1E4E4E',
+    alignItems: 'center',
     padding: 20,
+    paddingTop: 40,
+  },
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
-    marginTop: 16,
+    color: '#FFFFFF',
+    marginTop: 8,
   },
-  email: {
-    fontSize: 17,
-    color: 'gray',
-    marginTop: 4,
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  subtitle: {
+    fontSize: 16,
+    color: '#B2F5EA',
+    marginTop: 6,
     marginBottom: 12,
+    textAlign: 'center'
   },
-  infoRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 12,
-    justifyContent: 'center',
+  mapWrapper: {
+    position: 'relative',
+    width: screen.width - 40,
+    height: 300,
+    borderRadius: 15,
+    overflow: 'hidden',
+    marginTop: 10,
   },
-  infoLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-    marginRight: 6,
+  map: {
+    flex: 1,
   },
-  infoValue: {
-    fontSize: 16,
-    color: 'white',
+  centerButton: {
+    position: 'absolute',
+    bottom: 15,
+    right: 15,
+    backgroundColor: '#4ECCA3',
+    padding: 12,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  refreshButton: {
+    position: 'absolute',
+    bottom: 75,
+    right: 15,
+    backgroundColor: '#4ECCA3',
+    padding: 10,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  customMarkerWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: '#fff',
+  },
+  customMarkerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });
