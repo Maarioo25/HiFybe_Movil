@@ -91,6 +91,6 @@ Este proyecto ha sido desarrollado como parte de un **proyecto de final de grado
 
 **Mario Bueno López**
 📧 [mariobueno060@gmail.com](mailto:mariobueno060@gmail.com)
-🔗 [LinkedIn](https://www.linkedin.com/in/mario-bueno25/)
+🔗 [LinkedIn](https://www.linkedin.com/in/mario-bueno-l%C3%B3pez-a35181250/)
 💻 [HiFybe Web](https://github.com/Maarioo25/HiFybe_FrontEnd)
 🛠️ [HiFybe Backend](https://github.com/Maarioo25/HiFybe_BackEnd)
