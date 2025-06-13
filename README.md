@@ -2,9 +2,10 @@
 
 Este repositorio contiene la **aplicación móvil** de **HiFybe**, una red social musical que conecta a personas según su ubicación y gustos musicales, gracias a la integración con Spotify. La app está desarrollada con **React Native** y **Expo**, y se conecta al backend de HiFybe para ofrecer una experiencia social y musical completa desde el móvil.
 
-🔗 Repositorio: [HiFybe\_Movil](https://github.com/Maarioo25/HiFybe_Movil)
-🚀 Web desplegada: [https://mariobueno.info](https://mariobueno.info)
-🚀 Backend desplegado: [https://api.mariobueno.info](https://api.mariobueno.info)
+- 🔗 Repositorio: [HiFybe\_Movil](https://github.com/Maarioo25/HiFybe_Movil)
+- 🚀 Web desplegada: [https://mariobueno.info](https://mariobueno.info)
+- 🚀 Backend desplegado: [https://api.mariobueno.info](https://api.mariobueno.info)
+- 📽️ Presentación: [Ver en Canva](https://www.canva.com/design/DAGqML3KOHU/Gmd0HagvLIDl1Kx24MKn_w/view?utm_content=DAGqML3KOHU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=haca5c05453)
 
 ---
 
