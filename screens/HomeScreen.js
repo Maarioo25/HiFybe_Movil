@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   errorText: { color: '#FFFFFF', fontSize: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16 , paddingTop: 48},
   logo: {
     width: 40,
     height: 40,
