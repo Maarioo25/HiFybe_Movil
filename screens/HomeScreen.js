@@ -44,7 +44,7 @@ export default function HomeScreen() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return null;
     const loc = await Location.getCurrentPositionAsync({});
-    return [-3.7635, 40.3270];
+    return [loc.coords.longitude, loc.coords.latitude];
   };
 
   const formatUri = (path) => {
