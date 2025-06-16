@@ -1,4 +1,3 @@
-// utils/geocode.js
 export async function reverseGeocode(lat, lon) {
     try {
       const res = await fetch(

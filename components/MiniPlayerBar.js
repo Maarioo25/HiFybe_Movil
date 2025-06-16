@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePlayer } from '../context/PlayerContext';
 
+// Componente para mostrar la barra del reproductor
 export default function MiniPlayerBar() {
   const { track } = usePlayer();
   const insets = useSafeAreaInsets();

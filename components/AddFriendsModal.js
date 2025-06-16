@@ -1,4 +1,3 @@
-// AddFriendModal.js
 import React, { useEffect, useState } from 'react';
 import {
   Modal,
@@ -18,9 +17,11 @@ export default function AddFriendModal({ visible, onClose, existingFriends, onSu
   const [search, setSearch] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
+  // useEffect para obtener los usuarios
   useEffect(() => {
     if (!visible) return;
   
+    // Función para obtener los usuarios
     const fetchUsers = async () => {
       try {
         const user = await userService.getCurrentUser();
@@ -31,10 +32,10 @@ export default function AddFriendModal({ visible, onClose, existingFriends, onSu
         console.log(`Total users fetched: ${all.length}`);
   
         const existing = await friendService.getFriends(user._id);
-        console.log(`👥 Existing friends (${existing.length}):`, existing.map(f => f._id));
+        console.log(`Existing friends (${existing.length}):`, existing.map(f => f._id));
   
         const solicitudesRecibidas = await friendService.getRequests(user._id);
-        console.log(`📨 Pending requests (${solicitudesRecibidas.length}):`, solicitudesRecibidas);
+        console.log(`Pending requests (${solicitudesRecibidas.length}):`, solicitudesRecibidas);
   
         const existingIds = new Set(
             existing
@@ -43,7 +44,6 @@ export default function AddFriendModal({ visible, onClose, existingFriends, onSu
               .map(id => id.toString())
           );
           
-  
         const solicitadosIds = new Set(
           solicitudesRecibidas
             .map(s => {
@@ -81,12 +81,8 @@ export default function AddFriendModal({ visible, onClose, existingFriends, onSu
   
     fetchUsers();
   }, [visible]);
-  
-  
-  
-  
-  
 
+  // Función para enviar una solicitud de amistad
   const handleSendRequest = async (targetId, targetName) => {
     try {
       console.log("Enviando solicitud de amistad...");
@@ -109,7 +105,7 @@ export default function AddFriendModal({ visible, onClose, existingFriends, onSu
     }
   };
   
-
+  // Filtrar usuarios según la búsqueda
   const filteredUsers = users.filter(u =>
     u.nombre?.toLowerCase().includes(search.toLowerCase())
   );

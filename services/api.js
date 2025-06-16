@@ -1,11 +1,13 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Configuración de axios
 const api = axios.create({
   baseURL: 'https://api.mariobueno.info',
   withCredentials: true,
 });
 
+// Interceptor de peticiones
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
   console.log('[API] Token cargado:', token);
@@ -21,6 +23,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Interceptor de respuestas
 api.interceptors.response.use(
   (response) => {
     console.log('[API] Response:', {

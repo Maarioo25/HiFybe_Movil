@@ -30,6 +30,7 @@ export default function PlaylistDetailScreen() {
     setTimeout(() => setPopupVisible(false), 2000);
   };
 
+  // Función para reproducir una canción
   const reproducirCancion = async (trackUri) => {
     try {
       const token = await AsyncStorage.getItem('spotifyToken');
@@ -57,6 +58,7 @@ export default function PlaylistDetailScreen() {
     }
   };
 
+  // useEffect para cargar la playlist
   useEffect(() => {
     (async () => {
       if (!playlistId) {
@@ -98,6 +100,7 @@ export default function PlaylistDetailScreen() {
     })();
   }, [playlistId]);
 
+  // Función para guardar el nombre de la playlist
   const handleSaveName = async () => {
     try {
       if (!tokenSpotify) throw new Error('Token no disponible');
@@ -121,6 +124,7 @@ export default function PlaylistDetailScreen() {
     }
   };
 
+  // Función para eliminar una canción de la playlist
   const handleRemoveTrack = async (trackUri) => {
     try {
       if (!tokenSpotify) throw new Error('Token no disponible');
@@ -148,6 +152,7 @@ export default function PlaylistDetailScreen() {
     }
   };
 
+  // Renderizado de cada canción
   const renderItem = ({ item }) => {
     const imageUrl = item.album?.images?.[0]?.url ?? 'https://via.placeholder.com/50';
     const title = item.name ?? 'Sin título';

@@ -10,30 +10,22 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
-  TextInput,
-  Alert
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { playlistService, userService } from '../services';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { usePlayer } from '../context/PlayerContext';
-import * as ImagePicker from 'expo-image-picker';
+import { playlistService } from '../services';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function FriendPlaylistDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { playlistId } = route.params;
-  const { setTrack } = usePlayer();
-
   const [playlist, setPlaylist] = useState(null);
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [snapshotId, setSnapshotId] = useState('');
   const [noSpotifyAccess, setNoSpotifyAccess] = useState(false);
 
+  // Función para cargar la playlist del amigo
   useEffect(() => {
     (async () => {
       try {
@@ -47,10 +39,8 @@ export default function FriendPlaylistDetailScreen() {
         const t = await playlistService.getPlaylistTracks(playlistId);
         setPlaylist(p);
         setTracks(t || []);
-        setNewName(p.nombre);
-        setSnapshotId(p.snapshot_id || '');
       } catch (err) {
-        console.error('❌ Error al cargar la playlist del amigo:', err);
+        console.error('Error al cargar la playlist del amigo:', err);
         setPlaylist(null);
         setTracks([]);
       } finally {
@@ -59,6 +49,7 @@ export default function FriendPlaylistDetailScreen() {
     })();
   }, [playlistId]);
 
+  // Función para renderizar una canción
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.trackCard}>
       <Image source={{ uri: item.album?.images?.[0]?.url }} style={styles.trackImage} />
@@ -69,6 +60,7 @@ export default function FriendPlaylistDetailScreen() {
     </TouchableOpacity>
   );
 
+  // Renderizado de la pantalla
   if (loading) {
     return (
       <View style={styles.loading}>
@@ -77,6 +69,7 @@ export default function FriendPlaylistDetailScreen() {
     );
   }
 
+  // Renderizado de la pantalla
   if (noSpotifyAccess) {
     return (
       <SafeAreaView style={styles.container}>
@@ -93,6 +86,7 @@ export default function FriendPlaylistDetailScreen() {
     );
   }
 
+  // Renderizado de la pantalla
   if (!playlist) {
     return (
       <View style={styles.loading}>
@@ -106,6 +100,7 @@ export default function FriendPlaylistDetailScreen() {
     );
   }
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />

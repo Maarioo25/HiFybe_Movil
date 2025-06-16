@@ -18,7 +18,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { userService, friendService, notificationService } from '../services';
 import { usePlayer } from '../context/PlayerContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import MiniPlayerBar from '../components/MiniPlayerBar';
+import CustomPopUp from '../components/CustomPopUp';
+
 
 const BASE_URL = 'https://api.mariobueno.info';
 
@@ -32,14 +33,19 @@ export default function HomeScreen() {
   const [usuariosCercanos, setUsuariosCercanos] = useState([]);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [mostrarUbicacion, setMostrarUbicacion] = useState(true);
+  const [popUpVisible, setPopUpVisible] = useState(false);
+  const [popUpMensaje, setPopUpMensaje] = useState('');
+
   const cameraRef = useRef(null);
 
+  // Solicitar permisos de ubicación al cargar la pantalla
   useEffect(() => {
     if (Platform.OS === 'android') {
       PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
     }
   }, []);
 
+  // Función para obtener la ubicación actual
   const obtenerUbicacion = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return null;
@@ -47,12 +53,14 @@ export default function HomeScreen() {
     return [loc.coords.longitude, loc.coords.latitude];
   };
 
+  // Función para formatear la URL de una imagen
   const formatUri = (path) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
     return `${BASE_URL}/${path.replace(/^\/+/, '')}`;
   };
 
+  // Función para actualizar el mapa
   const actualizarMapa = async () => {
     try {
       const coords = await obtenerUbicacion();
@@ -72,16 +80,20 @@ export default function HomeScreen() {
     }
   };
 
+  // Función para manejar el clic en el botón de seguir
   const handleFollow = async (userId) => {
     try {
       await friendService.sendRequest(usuario._id, userId);
       await notificationService.crear(userId, `${usuario.nombre} te ha enviado una solicitud`);
-      Alert.alert('¡Solicitud enviada!', 'Has solicitado seguir a este usuario.');
+      setPopUpVisible(true);
+      setPopUpMensaje('¡Solicitud enviada!', 'Has solicitado seguir a este usuario.');
     } catch {
-      Alert.alert('Error', 'No se pudo enviar la solicitud.');
+      setPopUpVisible(true);
+      setPopUpMensaje('Error', 'No se pudo enviar la solicitud.');
     }
   };
 
+  // Función para reproducir una canción
   const reproducirCancion = async (trackUri) => {
     try {
       const token = await AsyncStorage.getItem('spotifyToken');
@@ -97,10 +109,10 @@ export default function HomeScreen() {
       });
 
       if (res.status === 204) {
-        console.log('▶️ Reproducción iniciada');
+        console.log('Reproducción iniciada');
       } else {
         const msg = await res.text();
-        console.error('[Spotify Error]', res.status, msg);
+        console.error('Spotify Error', res.status, msg);
         Alert.alert('Error', 'No se pudo iniciar la reproducción');
       }
     } catch (err) {
@@ -109,6 +121,7 @@ export default function HomeScreen() {
     }
   };
 
+  // Función para manejar el clic en un marcador
   const handleMarkerPress = async (u) => {
     try {
       const song = await userService.getCancionUsuario(u._id);
@@ -119,6 +132,7 @@ export default function HomeScreen() {
     }
   };
 
+  // Función para alternar la visualización de la ubicación
   const handleToggleUbicacion = () => {
     if (mostrarUbicacion) {
       setUsuariosCercanos([]);
@@ -129,6 +143,7 @@ export default function HomeScreen() {
     setMostrarUbicacion(!mostrarUbicacion);
   };
 
+  // Función para centrar el mapa en la ubicación actual
   const handleCenter = () => {
     cameraRef.current?.setCamera({
       centerCoordinate: ubicacion,
@@ -136,8 +151,11 @@ export default function HomeScreen() {
       animationDuration: 500
     });
   };
+
+  // Función para refrescar el mapa
   const handleRefresh = () => actualizarMapa();
 
+  // useEffect para cargar el perfil y la ubicación 
   useEffect(() => {
     (async () => {
       try {
@@ -171,6 +189,7 @@ export default function HomeScreen() {
     );
   }
 
+  // Renderizado de la pantalla
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#1E4E4E" barStyle="light-content" />
@@ -356,7 +375,13 @@ export default function HomeScreen() {
       </View>
       <View style={styles.playerSpacer} />
       
-      
+      <CustomPopUp
+        visible={popUpVisible}
+        onClose={() => setPopUpVisible(false)}
+      >
+        <Text style={{ color: 'white', fontSize: 16, textAlign: 'center' }}>{popUpMensaje}</Text>
+</CustomPopUp>
+
     </View>
   );
 }

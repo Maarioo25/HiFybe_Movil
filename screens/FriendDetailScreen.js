@@ -7,6 +7,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { friendService, userService, playlistService, conversationService } from '../services';
 
+// Componente para mostrar la información de un amigo
 export default function FriendDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
@@ -18,6 +19,7 @@ export default function FriendDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // useEffect para cargar la información del amigo
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -55,6 +57,7 @@ export default function FriendDetailScreen() {
     fetchData();
   }, [friendId]);
 
+  // Función para iniciar una conversación
   const handleStartConversation = async () => {
     try {
       const currentUser = await userService.getCurrentUser();
@@ -77,27 +80,24 @@ export default function FriendDetailScreen() {
         params: { conversacionId },
       });
     } catch (err) {
-      console.error('❌ Error iniciando conversación:', err?.response?.data || err);
+      console.error('Error iniciando conversación:', err?.response?.data || err);
     }
   };
 
+  // Función para eliminar una amistad
   const handleDeleteFriend = async () => {
     if (!amistadId) return;
   
     try {
       await friendService.deleteFriend(amistadId);
-      navigation.goBack(); // Vuelve atrás tras eliminar
+      navigation.goBack();
     } catch (err) {
-      console.error('❌ Error eliminando amistad:', err?.response?.data || err);
+      console.error('Error eliminando amistad:', err?.response?.data || err);
       alert('No se pudo eliminar la amistad. Inténtalo de nuevo.');
     }
   };
   
-  
-  
-  
-  
-
+  // Función para ir a la pantalla de detalle de una playlist
   const goToPlaylistDetail = (playlistId) => {
     navigation.navigate('FriendPlaylistDetail', {
       playlistId,
@@ -105,6 +105,7 @@ export default function FriendDetailScreen() {
     });
   };
 
+  // Renderizado de la pantalla
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
@@ -128,6 +129,7 @@ export default function FriendDetailScreen() {
 
   const filteredPlaylists = playlists.filter(pl => pl.canciones > 0);
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />

@@ -25,6 +25,7 @@ const PlaylistsStack = createNativeStackNavigator();
 const ChatsStack = createNativeStackNavigator();
 const FriendsStack = createNativeStackNavigator();
 
+// Navegador de playlists
 function PlaylistsStackNavigator() {
   return (
     <PlaylistsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -34,6 +35,7 @@ function PlaylistsStackNavigator() {
   );
 }
 
+// Navegador de chats
 function ChatsStackNavigator() {
   return (
     <ChatsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -43,6 +45,7 @@ function ChatsStackNavigator() {
   );
 }
 
+// Navegador de amigos
 function FriendsStackNavigator() {
   return (
     <FriendsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -53,6 +56,7 @@ function FriendsStackNavigator() {
   );
 }
 
+// Navegador de tabs
 function BottomTabs() {
   const insets = useSafeAreaInsets();
 
@@ -114,6 +118,7 @@ function BottomTabs() {
   );
 }
 
+// Navegador principal
 export default function Navigation() {
   return (
     <NavigationContainer>

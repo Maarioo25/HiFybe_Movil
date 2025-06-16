@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { userService } from '../services';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 
+// Componente de perfil
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -80,7 +81,7 @@ export default function ProfileScreen() {
         userService.updatePreferencias(user._id, { ciudad, generos_favoritos: generos.split(',').map(g => g.trim()) }),
         userService.updateRedesSociales(user._id, { instagram, twitter, tiktok })
       ]);
-      mostrarToast('✅ Perfil actualizado correctamente');
+      mostrarToast('Perfil actualizado correctamente');
     } catch (err) {
       console.error('Error guardando perfil', err);
       Alert.alert('Error al guardar perfil');

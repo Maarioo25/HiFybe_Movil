@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AddFriendsModal from '../components/AddFriendsModal';
 import { useFocusEffect } from '@react-navigation/native';
 
+// Componente para mostrar la lista de amigos
 export default function FriendsScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('amigos');
   const [friends, setFriends] = useState([]);
@@ -50,6 +51,7 @@ export default function FriendsScreen({ navigation }) {
     }, [])
   );
 
+  // Función para manejar la respuesta a una solicitud de amistad
   const handleRequest = async (id, estado) => {
     try {
       await friendService.respondFriendRequest(id, estado);
@@ -64,10 +66,12 @@ export default function FriendsScreen({ navigation }) {
     }
   };
 
+  // Función para manejar el clic en el botón de agregar amigo
   const handleAddFriendPress = () => {
     setModalVisible(true);
   };
 
+  // Función para renderizar un amigo
   const renderFriend = ({ item }) => {
     if (item._id === 'add') {
       return (
@@ -104,6 +108,7 @@ export default function FriendsScreen({ navigation }) {
     );
   };
 
+  // Función para renderizar una solicitud de amistad
   const renderRequest = ({ item }) => (
     <View style={styles.requestCard}>
       <Text style={styles.requestName}>{item.de_usuario_id?.nombre || 'Usuario desconocido'}</Text>
@@ -124,6 +129,7 @@ export default function FriendsScreen({ navigation }) {
     </View>
   );
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={styles.container}>
       <AddFriendsModal

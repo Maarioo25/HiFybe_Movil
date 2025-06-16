@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Función para hacer peticiones a la API de Spotify
 export const spotifyFetch = async (url, options = {}) => {
   const token = await AsyncStorage.getItem('spotifyToken');
   if (!token) throw new Error('No se encontró el token de Spotify');

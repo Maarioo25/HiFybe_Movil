@@ -1,7 +1,9 @@
-// services/conversationService.js
 import api from './api';
 
+// Servicio de conversaciones
 export const conversationService = {
+
+  // Obtiene las conversaciones de un usuario
   getConversations: async (usuarioId) => {
     const res = await api.get(`/conversaciones/usuarios/${usuarioId}`);
     if (!Array.isArray(res.data)) {
@@ -10,12 +12,16 @@ export const conversationService = {
     }
     return res.data;
   },
+
+  // Crea una nueva conversación
   createConversation: payload =>
     api.post('/conversaciones', payload).then(r => r.data),
 
+  // Obtiene los mensajes de una conversación
   getMessages: convoId =>
     api.get(`/conversaciones/${convoId}/mensajes`).then(r => r.data),
 
+  // Envía un mensaje a una conversación
   sendMessage: async (convoId, body) => {
     try {
       const r = await api.post(`/conversaciones/${convoId}/mensajes`, body);

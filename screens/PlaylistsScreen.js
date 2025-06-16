@@ -15,6 +15,7 @@ export default function PlaylistsScreen() {
   const [hasSpotify, setHasSpotify] = useState(true);
   const navigation = useNavigation();
 
+  // useEffect para cargar las playlists
   useEffect(() => {
     (async () => {
       try {
@@ -48,6 +49,7 @@ export default function PlaylistsScreen() {
     })();
   }, []);
 
+  // Renderizado de cada playlist
   const renderItem = ({ item }) => {
     const imageUrl = item.imagen ?? 'https://via.placeholder.com/180';
     const title = item.nombre ?? 'Sin título';

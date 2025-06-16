@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Modal from 'react-native-modal';
 
+// Componente para mostrar un popup personalizado
 export default function CustomPopUp({ visible, onClose, children }) {
   return (
     <Modal

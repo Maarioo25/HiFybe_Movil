@@ -1,4 +1,3 @@
-// screens/RegisterScreen.js
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -20,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
+// Componente de registro
 export default function RegisterScreen({ navigation }) {
   const [nombre, setNombre] = useState('');
   const [apellidos, setApellidos] = useState('');

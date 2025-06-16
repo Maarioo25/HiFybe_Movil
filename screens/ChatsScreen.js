@@ -9,6 +9,7 @@ import { conversationService, userService } from '../services';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Componente para mostrar la lista de chats
 export default function ChatsScreen() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,7 @@ export default function ChatsScreen() {
     }, [])
   );
 
+  // Función para renderizar un chat
   const renderItem = ({ item }) => {
     if (!item.usuario1_id?._id || !item.usuario2_id?._id) return null;
 
@@ -83,6 +85,7 @@ export default function ChatsScreen() {
     );
   };
 
+  // Renderizado de la pantalla
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -91,6 +94,7 @@ export default function ChatsScreen() {
     );
   }
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />

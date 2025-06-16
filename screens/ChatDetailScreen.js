@@ -20,6 +20,7 @@ import { usePlayer } from '../context/PlayerContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from 'react-native';
 
+// Componente para mostrar el detalle de una conversación
 export default function ChatDetailScreen() {
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -48,11 +49,12 @@ export default function ChatDetailScreen() {
     })();
   }, [conversacionId]);
 
+  // Función para reproducir una canción
   const reproducirCancion = async (trackUri) => {
     try {
-      console.log('🎧 Intentando reproducir canción:', trackUri);
+      console.log('Intentando reproducir canción:', trackUri);
       const token = await AsyncStorage.getItem('spotifyToken');
-      console.log('🔐 Token de Spotify:', token);
+      console.log('Token de Spotify:', token);
       if (!token) throw new Error('Token de Spotify no disponible');
 
       const res = await fetch('https://api.spotify.com/v1/me/player/play', {
@@ -65,12 +67,12 @@ export default function ChatDetailScreen() {
       });
 
       const responseText = await res.text();
-      console.log(`📡 Respuesta de Spotify (${res.status}):`, responseText);
+      console.log(`Respuesta de Spotify (${res.status}):`, responseText);
 
       if (res.status === 204) {
-        console.log('▶️ Reproducción iniciada');
+        console.log('Reproducción iniciada');
       } else {
-        console.error('[Spotify Error]', res.status, responseText);
+        console.error('Spotify Error', res.status, responseText);
         Alert.alert('Error', 'No se pudo iniciar la reproducción');
       }
     } catch (err) {
@@ -79,6 +81,7 @@ export default function ChatDetailScreen() {
     }
   };
 
+  // Función para enviar un mensaje
   const handleEnviar = async () => {
     if (!nuevoMensaje.trim() || !usuarioActualId) return;
 
@@ -96,7 +99,8 @@ export default function ChatDetailScreen() {
     }
   };
 
-  const renderItem = ({ item }) => {
+  // Función para renderizar un mensaje
+    const renderItem = ({ item }) => {
     const esMio = item.emisor_id === usuarioActualId || item.emisor_id?._id === usuarioActualId;
     const tieneCancion = !!item.cancion;
 
