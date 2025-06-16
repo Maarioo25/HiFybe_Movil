@@ -10,4 +10,10 @@ export const notificationService = {
 
   deleteNotification: notificationId =>
     api.delete(`/notificaciones/${notificationId}`).then(r => r.data),
+  crear: (userId, mensaje) =>
+    api.post(`/notificaciones`, {
+      usuario_id: userId,
+      mensaje: mensaje
+    }).then(r => r.data),
+  
 };

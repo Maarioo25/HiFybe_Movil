@@ -1,4 +1,4 @@
-package com.mariobueno04.HiFybe_Movil
+package com.mariobueno04.HiFybe
 
 import android.os.Build
 import android.os.Bundle

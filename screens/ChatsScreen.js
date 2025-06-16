@@ -36,6 +36,9 @@ export default function ChatsScreen() {
   }, []);
 
   const renderItem = ({ item }) => {
+    console.log('Conversación:', item);
+    if (!item.usuario1_id?._id || !item.usuario2_id?._id) return null;
+
     const other = item.usuario1_id._id === item.usuarioActualId
       ? item.usuario2_id
       : item.usuario1_id;
@@ -45,8 +48,8 @@ export default function ChatsScreen() {
     const avatarUri = other?.foto_perfil
       ? (other.foto_perfil.startsWith('http')
           ? other.foto_perfil
-          : `https://api.mariobueno.info${other.foto_perfil}`)
-      : null;
+          : `https://api.mariobueno.info${other.foto_perfil.startsWith('/') ? '' : '/'}${other.foto_perfil}`)
+      : `https://via.placeholder.com/100?text=?`;
 
     return (
       <TouchableOpacity

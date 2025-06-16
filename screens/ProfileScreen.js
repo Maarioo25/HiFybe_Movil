@@ -32,6 +32,7 @@ export default function ProfileScreen() {
   const [toastAnim] = useState(new Animated.Value(0));
   const navigation = useNavigation();
 
+  // Cargar perfil
   useEffect(() => {
     (async () => {
       try {
@@ -53,6 +54,7 @@ export default function ProfileScreen() {
     })();
   }, []);
 
+  // Mostrar toast
   const mostrarToast = (mensaje) => {
     setToastMessage(mensaje);
     Animated.timing(toastAnim, {
@@ -70,6 +72,7 @@ export default function ProfileScreen() {
     });
   };
 
+  // Guardar perfil
   const guardarPerfil = async () => {
     try {
       await Promise.all([
@@ -84,6 +87,7 @@ export default function ProfileScreen() {
     }
   };
 
+  // Elegir foto
   const elegirFoto = async () => {
     const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permiso.granted) {
@@ -107,8 +111,9 @@ export default function ProfileScreen() {
     }
   };
 
+  // Cerrar sesión
   const cerrarSesion = async () => {
-    await AsyncStorage.removeItem('token');
+    await AsyncStorage.multiRemove(['token', 'spotifyToken']);
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
 
@@ -123,7 +128,7 @@ export default function ProfileScreen() {
       <Animated.View style={[styles.toast, { opacity: toastAnim }]}> 
         <Text style={styles.toastText}>{toastMessage}</Text>
       </Animated.View>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingBottom: 100 }]}>
         <Text style={styles.title}>Tu perfil</Text>
 
         <TouchableOpacity style={styles.avatarWrapper} onPress={elegirFoto}>

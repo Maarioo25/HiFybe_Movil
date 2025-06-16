@@ -1,4 +1,4 @@
-package com.mariobueno04.HiFybe_Movil
+package com.mariobueno04.HiFybe
 
 import android.app.Application
 import android.content.res.Configuration

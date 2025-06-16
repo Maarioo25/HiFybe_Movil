@@ -16,9 +16,7 @@ import MapboxGL from '@rnmapbox/maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { userService } from '../services';
-import { reverseGeocode } from '../utils/geocode';
 import { StatusBar } from 'react-native';
-
 
 MapboxGL.setAccessToken("pk.eyJ1IjoibWFhcmlvbzI1IiwiYSI6ImNtYnNkYndrODA1cjUyanNlMzVscHZoNnYifQ.1X7w2okP-pUP9R00f-JEyw");
 
@@ -100,7 +98,6 @@ export default function HomeScreen() {
   }
 
   return (
-    
     <ScrollView contentContainerStyle={styles.container}>
       <StatusBar backgroundColor="#1E4E4E" barStyle="light-content" />
       <View style={styles.header}>
@@ -224,12 +221,12 @@ const styles = StyleSheet.create({
     color: '#B2F5EA',
     marginTop: 6,
     marginBottom: 12,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   mapWrapper: {
     position: 'relative',
     width: screen.width - 40,
-    height: 300,
+    height: 450,
     borderRadius: 15,
     overflow: 'hidden',
     marginTop: 10,

@@ -1,77 +1,182 @@
-// FriendsScreen.js
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, ImageBackground, StyleSheet,
-  TouchableOpacity, ActivityIndicator, Alert,
-  SafeAreaView, StatusBar, Platform
+  TouchableOpacity, ActivityIndicator, Alert, SafeAreaView,
+  StatusBar, Platform
 } from 'react-native';
 import { userService, friendService } from '../services';
 import { LinearGradient } from 'expo-linear-gradient';
+import AddFriendsModal from '../components/AddFriendsModal';
 
-export default function FriendsScreen() {
+export default function FriendsScreen({ navigation }) {
+  const [activeTab, setActiveTab] = useState('amigos');
   const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
+  // Cargar amigos y solicitudes
   useEffect(() => {
-    const cargarAmigos = async () => {
+    (async () => {
       try {
         const usuario = await userService.getCurrentUser();
-        const lista = await friendService.getFriends(usuario._id);
-        setFriends(lista);
+        setUserId(usuario._id);
+        const [amigos, solicitudes] = await Promise.all([
+          friendService.getFriends(usuario._id),
+          friendService.getRequests(usuario._id),
+        ]);
+        setFriends(amigos);
+        setRequests(solicitudes);
       } catch (err) {
-        console.error('[FriendsScreen] Error:', err.response?.data || err.message);
-        Alert.alert('Error', err.response?.data?.mensaje || 'No se pudieron cargar tus amigos');
+        Alert.alert('Error', 'No se pudieron cargar tus amigos/solicitudes');
       } finally {
         setLoading(false);
       }
-    };
-    cargarAmigos();
+    })();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
-      <ImageBackground
-        source={{
-          uri: item.foto_perfil?.startsWith('http')
-            ? item.foto_perfil
-            : `https://api.mariobueno.info${item.foto_perfil}`,
-        }}
-        style={styles.imageBackground}
-        imageStyle={styles.imageStyle}
-      >
-        <LinearGradient
-          colors={['rgba(30,78,78,0)', 'rgba(30,78,78,0.95)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.overlay}
-        >
-          <Text style={styles.name}>{item.nombre || 'Usuario'}</Text>
-        </LinearGradient>
-      </ImageBackground>
-    </TouchableOpacity>
-  );
+  // Manejar solicitud
+  const handleRequest = async (id, estado) => {
+    try {
+      await friendService.respondFriendRequest(id, estado);
+      const nuevas = requests.filter((s) => s._id !== id);
+      setRequests(nuevas);
+      if (estado === 'aceptada') {
+        const actualizados = await friendService.getFriends(userId);
+        setFriends(actualizados);
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo procesar la solicitud');
+    }
+  };
 
-  if (loading) {
+  // Manejar agregar amigo
+  const handleAddFriendPress = () => {
+    setModalVisible(true);
+  };
+
+  // Renderizar amigo
+  const renderFriend = ({ item }) => {
+    if (item._id === 'add') {
+      return (
+        <TouchableOpacity style={styles.addCard} onPress={handleAddFriendPress}>
+          <Text style={styles.addText}>+</Text>
+        </TouchableOpacity>
+      );
+    }
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4ECCA3" />
-      </View>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate('FriendDetail', { friendId: item.id || item._id })}
+      >
+        <ImageBackground
+          source={{
+            uri: item.foto_perfil?.startsWith('http')
+              ? item.foto_perfil
+              : `https://api.mariobueno.info${item.foto_perfil}`,
+          }}
+          style={styles.imageBackground}
+          imageStyle={styles.imageStyle}
+        >
+          <LinearGradient
+            colors={['rgba(30,78,78,0)', 'rgba(30,78,78,0.95)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.overlay}
+          >
+            <Text style={styles.name}>{item.nombre || 'Usuario'}</Text>
+          </LinearGradient>
+        </ImageBackground>
+      </TouchableOpacity>
     );
-  }
+  };
+
+  // Renderizar solicitud
+  const renderRequest = ({ item }) => (
+    <View style={styles.requestCard}>
+      <Text style={styles.requestName}>{item.de_usuario_id?.nombre || 'Usuario desconocido'}</Text>
+      <View style={styles.requestButtons}>
+        <TouchableOpacity
+          style={[styles.requestButton, { backgroundColor: '#4ECCA3' }]}
+          onPress={() => handleRequest(item._id, 'aceptada')}
+        >
+          <Text style={styles.requestButtonText}>Aceptar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.requestButton, { backgroundColor: '#FF6B6B' }]}
+          onPress={() => handleRequest(item._id, 'rechazada')}
+        >
+          <Text style={styles.requestButtonText}>Rechazar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
+      <AddFriendsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        currentUserId={userId}
+        existingFriends={friends}
+        onSuccess={async () => {
+          try {
+            const [amigos, solicitudes] = await Promise.all([
+              friendService.getFriends(userId),
+              friendService.getRequests(userId),
+            ]);
+            setFriends(amigos);
+            setRequests(solicitudes);
+          } catch (err) {
+            console.error('Error al recargar amigos:', err);
+          }
+        }}
+      />
+
       <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />
       <View style={styles.innerWrapper}>
         <View style={styles.headerSpacer} />
-        <Text style={styles.title}>Tus amigos</Text>
-        {friends.length === 0 ? (
-          <Text style={styles.alert}>No tienes amigos aún 😢</Text>
+        <Text style={styles.title}>Amigos</Text>
+
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'amigos' && styles.tabActive]}
+            onPress={() => setActiveTab('amigos')}
+          >
+            <Text style={[styles.tabText, activeTab === 'amigos' && styles.tabTextActive]}>
+              Amigos
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'solicitudes' && styles.tabActive]}
+            onPress={() => setActiveTab('solicitudes')}
+          >
+            <Text style={[styles.tabText, activeTab === 'solicitudes' && styles.tabTextActive]}>
+              Solicitudes
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4ECCA3" />
+          </View>
+        ) : activeTab === 'amigos' ? (
+          <FlatList
+            data={[...friends, { _id: 'add' }]}
+            keyExtractor={(item, index) => item._id || `item-${index}`}
+            renderItem={renderFriend}
+            contentContainerStyle={{ paddingBottom: 16 }}
+          />
+        ) : requests.length === 0 ? (
+          <Text style={styles.alert}>No tienes solicitudes pendientes</Text>
         ) : (
           <FlatList
-            data={friends}
-            keyExtractor={(f, index) => f._id || `amigo-${index}`}
-            renderItem={renderItem}
+            data={requests}
+            keyExtractor={(r) => r._id}
+            renderItem={renderRequest}
             contentContainerStyle={{ paddingBottom: 16 }}
           />
         )}
@@ -81,21 +186,75 @@ export default function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#1E4E4E' },
-  innerWrapper: {
-    flex: 1,
-    paddingTop: 0,
-    paddingHorizontal: 16,
+  container: { flex: 1, backgroundColor: '#1E4E4E' },
+  innerWrapper: { flex: 1, paddingHorizontal: 16 },
+  headerSpacer: { height: Platform.OS === 'android' ? StatusBar.currentHeight + 16 : 32 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 12 },
+  tabs: { flexDirection: 'row', justifyContent: 'center', marginBottom: 16 },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#4ECCA3',
   },
-  headerSpacer: {
-    height: Platform.OS === 'android' ? StatusBar.currentHeight + 16 : 32,
+  tabActive: {
+    backgroundColor: '#4ECCA3',
+  },
+  tabText: {
+    color: '#4ECCA3',
+    fontWeight: 'bold',
+  },
+  tabTextActive: {
+    color: '#1E4E4E',
   },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title:      { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: '#FFFFFF' },
-  alert:      { color: '#B2F5EA', textAlign: 'center', marginTop: 20 },
-  card:       { height: 100, borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
+  alert: { color: '#B2F5EA', textAlign: 'center', marginTop: 20 },
+  card: { height: 100, borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
   imageBackground: { flex: 1, justifyContent: 'center' },
   imageStyle: { resizeMode: 'cover' },
-  overlay:    { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
-  name:       { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF', marginLeft: 'auto' },
+  overlay: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
+  name: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF', marginLeft: 'auto' },
+  addCard: {
+    height: 100,
+    borderRadius: 16,
+    marginBottom: 16,
+    backgroundColor: '#2A6B6B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addText: {
+    fontSize: 36,
+    color: '#4ECCA3',
+    fontWeight: 'bold',
+  },
+  requestCard: {
+    backgroundColor: '#2A6B6B',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  requestName: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  requestButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  requestButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  requestButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
 });

@@ -1,14 +1,14 @@
-// services/userService.js
 import api from './api';
 
 export const userService = {
-  getAllUsers: () =>
-    api.get('/usuarios')
-      .then(r => r.data.usuarios ?? r.data),  // si viene en { usuarios: [...] }
+  getAllUsers: async () => {
+    const res = await api.get('/usuarios');
+    return res.data;
+  },
 
   getUserById: id =>
     api.get(`/usuarios/${id}`)
-      .then(r => r.data.usuario ?? r.data),   // si viene en { usuario: { ... } }
+      .then(r => r.data.usuario ?? r.data),
 
   updateProfile: (id, data) =>
     api.put(`/usuarios/${id}`, {
@@ -32,7 +32,7 @@ export const userService = {
 
   getCurrentUser: () =>
     api.get('/usuarios/me')
-      .then(r => r.data.usuario ?? r.data),   // extrae .usuario si existe
+      .then(r => r.data.usuario ?? r.data),
 
   logout: () =>
     api.post('/usuarios/logout')

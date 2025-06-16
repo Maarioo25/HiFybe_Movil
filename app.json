@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "HiFybe_Movil",
-    "slug": "HiFybe_Movil",
-    "scheme": "hifybe-movil",
+    "name": "HiFybe",
+    "slug": "HiFybe",
+    "scheme": "hifybe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.mariobueno04.HiFybe_Movil"
+      "package": "com.mariobueno04.HiFybe"
     },
     "web": {
       "favicon": "./assets/favicon.png"
