@@ -10,13 +10,15 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { conversationService, userService } from '../services';
-import MiniPlayerBar from '../components/MiniPlayerBar';
 import { usePlayer } from '../context/PlayerContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Alert from 'react-native';
 
 export default function ChatDetailScreen() {
   const [mensajes, setMensajes] = useState([]);
@@ -28,10 +30,10 @@ export default function ChatDetailScreen() {
   const route = useRoute();
   const { conversacionId } = route.params;
 
-  const { track } = usePlayer();
+  const { setTrack, track } = usePlayer();
 
   const MINI_PLAYER_HEIGHT = 60;
-  const INPUT_BAR_HEIGHT = 60; // aprox la altura de tu inputBar
+  const INPUT_BAR_HEIGHT = 60;
 
   useEffect(() => {
     (async () => {
@@ -45,6 +47,37 @@ export default function ChatDetailScreen() {
       }
     })();
   }, [conversacionId]);
+
+  const reproducirCancion = async (trackUri) => {
+    try {
+      console.log('🎧 Intentando reproducir canción:', trackUri);
+      const token = await AsyncStorage.getItem('spotifyToken');
+      console.log('🔐 Token de Spotify:', token);
+      if (!token) throw new Error('Token de Spotify no disponible');
+
+      const res = await fetch('https://api.spotify.com/v1/me/player/play', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ uris: [trackUri] })
+      });
+
+      const responseText = await res.text();
+      console.log(`📡 Respuesta de Spotify (${res.status}):`, responseText);
+
+      if (res.status === 204) {
+        console.log('▶️ Reproducción iniciada');
+      } else {
+        console.error('[Spotify Error]', res.status, responseText);
+        Alert.alert('Error', 'No se pudo iniciar la reproducción');
+      }
+    } catch (err) {
+      console.error('Error al reproducir:', err);
+      Alert.alert('Error', 'No se pudo reproducir la canción');
+    }
+  };
 
   const handleEnviar = async () => {
     if (!nuevoMensaje.trim() || !usuarioActualId) return;
@@ -65,11 +98,55 @@ export default function ChatDetailScreen() {
 
   const renderItem = ({ item }) => {
     const esMio = item.emisor_id === usuarioActualId || item.emisor_id?._id === usuarioActualId;
+    const tieneCancion = !!item.cancion;
+
+    const messageStyle = [
+      styles.message,
+      esMio ? styles.myMessage : styles.theirMessage,
+      tieneCancion ? styles.withSong : {},
+    ];
+
     return (
-      <View style={[styles.message, esMio ? styles.myMessage : styles.theirMessage]}>
-        <Text style={styles.messageText}>{item.contenido}</Text>
+      <View style={messageStyle}>
+        {item.contenido ? <Text style={styles.messageText}>{item.contenido}</Text> : null}
+
+        {tieneCancion && (
+          <View style={styles.songContainer}>
+            <Image source={{ uri: item.cancion.imagen }} style={styles.songImage} />
+            <View style={styles.songInfo}>
+              <Text style={styles.songTitle} numberOfLines={1}>
+                {item.cancion.nombre || item.cancion.titulo || 'Sin título'}
+              </Text>
+              <Text style={styles.songArtist} numberOfLines={1}>
+                {item.cancion.artista}
+              </Text>
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={() => {
+                  const formattedTrack = {
+                    name: item.cancion.nombre || item.cancion.titulo,
+                    artists: [{ name: item.cancion.artista }],
+                    album: { images: [{ url: item.cancion.imagen }] },
+                    uri: item.cancion.uri,
+                    duration_ms: 180000,
+                    addedAt: Date.now(),
+                  };
+                  setTrack(formattedTrack);
+                  reproducirCancion(item.cancion.uri);
+                }}
+              >
+                <Ionicons name="play" size={18} color="#1E4E4E" />
+                <Text style={styles.playText}>Reproducir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <Text style={styles.messageTime}>
-          {new Date(item.fecha_envio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(item.fecha_envio).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </Text>
       </View>
     );
@@ -105,13 +182,10 @@ export default function ChatDetailScreen() {
         />
 
         <View
-          style={[
-            styles.inputBar,
-            {
-              paddingBottom: Math.max(insets.bottom, 12),
-              marginBottom: track ? MINI_PLAYER_HEIGHT : 0,
-            },
-          ]}
+          style={[styles.inputBar, {
+            paddingBottom: Math.max(insets.bottom, 12),
+            marginBottom: track ? MINI_PLAYER_HEIGHT : 0,
+          }]}
         >
           <TextInput
             style={styles.textInput}
@@ -130,13 +204,8 @@ export default function ChatDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E4E4E',
-  },
-  flex: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#1E4E4E' },
+  flex: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,10 +222,11 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   message: {
-    maxWidth: '75%',
     padding: 10,
     borderRadius: 12,
     marginVertical: 4,
+    maxWidth: '80%',
+    minWidth: 60,
   },
   myMessage: {
     backgroundColor: '#4ECCA3',
@@ -166,9 +236,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A6B6B',
     alignSelf: 'flex-start',
   },
-  messageText: {
-    color: '#FFFFFF',
-  },
+  messageText: { color: '#FFFFFF' },
   messageTime: {
     fontSize: 10,
     color: '#B2F5EA',
@@ -193,7 +261,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: 8,
   },
-  iconButton: {
-    padding: 6,
+  iconButton: { padding: 6 },
+  songContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    backgroundColor: '#1E4E4E',
+    borderRadius: 10,
+    padding: 8,
+    gap: 10,
+    minWidth: 220,
+  },
+  songImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  songInfo: { flex: 1, justifyContent: 'center' },
+  songTitle: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  songArtist: {
+    color: '#B2F5EA',
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  playButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4ECCA3',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  playText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#1E4E4E',
+    fontWeight: 'bold',
+  },
+  withSong: {
+    maxWidth: '100%',
   },
 });
