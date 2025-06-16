@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, ImageBackground, StyleSheet,
   TouchableOpacity, ActivityIndicator, Alert, SafeAreaView,
@@ -7,6 +7,7 @@ import {
 import { userService, friendService } from '../services';
 import { LinearGradient } from 'expo-linear-gradient';
 import AddFriendsModal from '../components/AddFriendsModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function FriendsScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('amigos');
@@ -16,27 +17,39 @@ export default function FriendsScreen({ navigation }) {
   const [userId, setUserId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Cargar amigos y solicitudes
-  useEffect(() => {
-    (async () => {
-      try {
-        const usuario = await userService.getCurrentUser();
-        setUserId(usuario._id);
-        const [amigos, solicitudes] = await Promise.all([
-          friendService.getFriends(usuario._id),
-          friendService.getRequests(usuario._id),
-        ]);
-        setFriends(amigos);
-        setRequests(solicitudes);
-      } catch (err) {
-        Alert.alert('Error', 'No se pudieron cargar tus amigos/solicitudes');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-  // Manejar solicitud
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const usuario = await userService.getCurrentUser();
+          if (!isActive) return;
+          setUserId(usuario._id);
+          const [amigos, solicitudes] = await Promise.all([
+            friendService.getFriends(usuario._id),
+            friendService.getRequests(usuario._id),
+          ]);
+          if (isActive) {
+            setFriends(amigos);
+            setRequests(solicitudes);
+          }
+        } catch (err) {
+          if (isActive) Alert.alert('Error', 'No se pudieron cargar tus amigos/solicitudes');
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+
   const handleRequest = async (id, estado) => {
     try {
       await friendService.respondFriendRequest(id, estado);
@@ -51,12 +64,10 @@ export default function FriendsScreen({ navigation }) {
     }
   };
 
-  // Manejar agregar amigo
   const handleAddFriendPress = () => {
     setModalVisible(true);
   };
 
-  // Renderizar amigo
   const renderFriend = ({ item }) => {
     if (item._id === 'add') {
       return (
@@ -93,7 +104,6 @@ export default function FriendsScreen({ navigation }) {
     );
   };
 
-  // Renderizar solicitud
   const renderRequest = ({ item }) => (
     <View style={styles.requestCard}>
       <Text style={styles.requestName}>{item.de_usuario_id?.nombre || 'Usuario desconocido'}</Text>

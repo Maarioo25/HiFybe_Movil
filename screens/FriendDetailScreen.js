@@ -80,6 +80,19 @@ export default function FriendDetailScreen() {
       console.error('❌ Error iniciando conversación:', err?.response?.data || err);
     }
   };
+
+  const handleDeleteFriend = async () => {
+    if (!amistadId) return;
+  
+    try {
+      await friendService.deleteFriend(amistadId);
+      navigation.goBack(); // Vuelve atrás tras eliminar
+    } catch (err) {
+      console.error('❌ Error eliminando amistad:', err?.response?.data || err);
+      alert('No se pudo eliminar la amistad. Inténtalo de nuevo.');
+    }
+  };
+  
   
   
   
@@ -137,7 +150,7 @@ export default function FriendDetailScreen() {
             <Text style={styles.btnText}>Enviar mensaje</Text>
           </TouchableOpacity>
           {amistadId && (
-            <TouchableOpacity style={styles.btnDelete}>
+            <TouchableOpacity style={styles.btnDelete} onPress={handleDeleteFriend}>
               <Text style={styles.btnText}>Eliminar amistad</Text>
             </TouchableOpacity>
           )}
