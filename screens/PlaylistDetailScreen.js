@@ -239,9 +239,8 @@ export default function PlaylistDetailScreen() {
 
       <FlatList
         data={tracks}
-        keyExtractor={(item, index) => item.uri || item.id || index.toString()}
+        keyExtractor={(item, index) => `${item.uri || item.id}-${index}`}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 32 }}
       />
 
       <View style={{ position: 'absolute', top: 50, alignSelf: 'center', zIndex: 99 }}>

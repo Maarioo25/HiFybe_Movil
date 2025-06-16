@@ -43,10 +43,16 @@ export const userService = {
       .then(r => r.data.usuario ?? r.data)
       .catch(() => null),
 
-  getCancionUsuario: userId =>
-    api.get(`/usuarios/${userId}/cancion`)
-      .then(r => r.data.cancion ?? r.data)
-      .catch(() => null),
+  getCancionUsuario: async (userId) => {
+    try {
+      const res = await api.get(`/usuarios/${userId}/cancion`);
+      return res.data;
+    } catch (err) {
+      console.error("Error en getCancionUsuario:", err);
+      return null;
+    }
+  },
+      
 
   ocultarUbicacion: () =>
     api.post('/usuarios/ocultar-ubicacion')
