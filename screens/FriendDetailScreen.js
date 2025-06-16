@@ -4,7 +4,8 @@ import {
   ActivityIndicator, SafeAreaView, Platform, StatusBar,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { friendService, userService, playlistService } from '../services';
+import { Ionicons } from '@expo/vector-icons';
+import { friendService, userService, playlistService, conversationService } from '../services';
 
 export default function FriendDetailScreen() {
   const route = useRoute();
@@ -33,7 +34,7 @@ export default function FriendDetailScreen() {
 
         if (userData.auth_proveedor === 'spotify' || userData.spotifyId) {
           try {
-            const spotifyPlaylists = await playlistService.getFriendPlaylists(friendId);
+            const spotifyPlaylists = await playlistService.getUserPlaylists(friendId);
             setPlaylists(spotifyPlaylists);
           } catch (err) {
             console.error('Error cargando playlists Spotify:', err);
@@ -53,6 +54,36 @@ export default function FriendDetailScreen() {
 
     fetchData();
   }, [friendId]);
+
+  const handleStartConversation = async () => {
+    try {
+      const currentUser = await userService.getCurrentUser();
+  
+      const conversaciones = await conversationService.getConversations(currentUser._id);
+      const existente = conversaciones.find(c => {
+        const id1 = c.usuario1_id?._id || c.usuario1_id;
+        const id2 = c.usuario2_id?._id || c.usuario2_id;
+        return id1 === friendId || id2 === friendId;
+      });
+  
+      const conversacionId = existente?._id
+        ? existente._id
+        : (await conversationService.createConversation({
+          participantes: [currentUser._id, friendId],
+        }))._id;
+  
+      navigation.navigate('Chats', {
+        screen: 'ChatDetail',
+        params: { conversacionId },
+      });
+    } catch (err) {
+      console.error('❌ Error iniciando conversación:', err?.response?.data || err);
+    }
+  };
+  
+  
+  
+  
 
   const goToPlaylistDetail = (playlistId) => {
     navigation.navigate('FriendPlaylistDetail', {
@@ -74,16 +105,24 @@ export default function FriendDetailScreen() {
     return (
       <SafeAreaView style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonRow}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
           <Text style={styles.backButtonText}>Volver</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
+  const filteredPlaylists = playlists.filter(pl => pl.canciones > 0);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1E4E4E" />
+
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileSection}>
           <Image source={{ uri: friend.foto_perfil }} style={styles.avatar} />
@@ -94,7 +133,7 @@ export default function FriendDetailScreen() {
         </View>
 
         <View style={styles.buttonsRow}>
-          <TouchableOpacity style={styles.btnMessage}>
+          <TouchableOpacity style={styles.btnMessage} onPress={handleStartConversation}>
             <Text style={styles.btnText}>Enviar mensaje</Text>
           </TouchableOpacity>
           {amistadId && (
@@ -106,10 +145,10 @@ export default function FriendDetailScreen() {
 
         <View style={styles.playlistsSection}>
           <Text style={styles.sectionTitle}>Playlists públicas</Text>
-          {playlists.length === 0 ? (
+          {filteredPlaylists.length === 0 ? (
             <Text style={styles.noPlaylistsText}>No tiene playlists públicas</Text>
           ) : (
-            playlists.map(pl => (
+            filteredPlaylists.map(pl => (
               <TouchableOpacity
                 key={pl.id}
                 style={styles.playlistCard}
@@ -133,7 +172,7 @@ export default function FriendDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1E4E4E' },
-  scrollContent: { padding: 16 },
+  scrollContent: { padding: 16, paddingTop: 60 },
   centered: {
     flex: 1,
     backgroundColor: '#1E4E4E',
@@ -143,12 +182,18 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: '#4ECCA3', marginTop: 8, fontSize: 16 },
   errorText: { color: '#FF6B6B', fontSize: 18, marginBottom: 16 },
-  backButton: {
-    padding: 12,
-    backgroundColor: '#4ECCA3',
-    borderRadius: 20,
+  backButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  backButtonText: { color: '#1E4E4E', fontWeight: 'bold' },
+  backButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 40,
+    left: 10,
+    zIndex: 10,
+  },
   profileSection: {
     alignItems: 'center',
     marginBottom: 24,

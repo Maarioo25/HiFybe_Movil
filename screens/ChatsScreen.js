@@ -1,11 +1,10 @@
-// ChatsScreen.js
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
   ImageBackground, StyleSheet, ActivityIndicator, Alert,
   StatusBar, Platform
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { conversationService, userService } from '../services';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,26 +16,36 @@ export default function ChatsScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const user = await userService.getCurrentUser();
-        if (!user?._id) throw new Error('No se pudo obtener el usuario actual');
-        setMeId(user._id);
-        const list = await conversationService.getConversations(user._id);
-        const enriched = list.map(c => ({ ...c, usuarioActualId: user._id }));
-        setChats(enriched);
-      } catch (err) {
-        console.error('Error al cargar chats:', err.message);
-        Alert.alert('Error', err.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchChats = async () => {
+        try {
+          setLoading(true);
+          const user = await userService.getCurrentUser();
+          if (!user?._id) throw new Error('No se pudo obtener el usuario actual');
+          setMeId(user._id);
+          const list = await conversationService.getConversations(user._id);
+          const enriched = list.map(c => ({ ...c, usuarioActualId: user._id }));
+          if (isActive) setChats(enriched);
+        } catch (err) {
+          console.error('Error al cargar chats:', err.message);
+          Alert.alert('Error', err.message);
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+
+      fetchChats();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const renderItem = ({ item }) => {
-    console.log('Conversación:', item);
     if (!item.usuario1_id?._id || !item.usuario2_id?._id) return null;
 
     const other = item.usuario1_id._id === item.usuarioActualId
