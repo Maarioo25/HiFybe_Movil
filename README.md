@@ -82,7 +82,8 @@ npx expo run:android
 ```
 
 > Asegurate de tener Java JDK 17 o superior
-> Asegurate de tener en local.properties de la carpeta android la ruta de tu Android SDK
+
+> Asegurate de tener en local.properties de la carpeta android la ruta de tu Android SDK como sdk.dir=C:\\ y tu ruta del sdk
 
 ---
 
