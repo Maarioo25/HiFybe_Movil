@@ -74,11 +74,15 @@ cd HiFybe_Movil
 # Instalar dependencias
 npm install
 
+#Hacer build de la carpeta android.
+npx expo prebuild
+
 # Ejecutar en modo desarrollo
-npx expo start
+npx expo run:android
 ```
 
-> Asegúrate de tener configurado el archivo `.env` con las claves necesarias de Spotify y backend.
+> Asegurate de tener Java JDK 17 o superior
+> Asegurate de tener en local.properties de la carpeta android la ruta de tu Android SDK
 
 ---
 
